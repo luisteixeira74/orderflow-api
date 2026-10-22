@@ -1,19 +1,29 @@
-# OrderFlow API
+# OrderFlow API e Frontend
 
-API REST para gerenciamento de clientes, produtos e pedidos, desenvolvida com Node.js, TypeScript e PostgreSQL.
+Aplicação full stack para gerenciamento de clientes, produtos e pedidos, desenvolvida com Node.js, TypeScript, Fastify, PostgreSQL e React.
 
-O projeto demonstra práticas de desenvolvimento backend, incluindo validação de dados, organização por módulos, operações transacionais, controle de estoque e testes automatizados.
+O projeto demonstra práticas de desenvolvimento backend, incluindo validação de dados, organização modular, operações transacionais, controle de estoque, paginação e testes automatizados. O frontend consome a API REST e apresenta os pedidos em uma interface web.
 
 ## Tecnologias
 
-- **Node.js 22** — ambiente de execução
-- **TypeScript** — tipagem estática
-- **Fastify 5** — framework HTTP
-- **Prisma ORM 7** — acesso ao banco de dados
-- **PostgreSQL 17** — banco de dados relacional
-- **Zod** — validação de entradas
-- **Vitest** — testes automatizados
-- **Docker Compose** — ambiente local de desenvolvimento
+### Backend
+
+- Node.js 22 — ambiente de execução
+- TypeScript — tipagem estática
+- Fastify 5 — framework HTTP
+- Prisma ORM 7 — acesso ao banco de dados
+- PostgreSQL 17 — banco de dados relacional
+- Zod — validação de entradas
+- Vitest — testes automatizados
+- Docker Compose — ambiente local de desenvolvimento
+
+### Frontend
+
+- React
+- Typescript
+- Vite
+- CSS
+- Fetch API
 
 ## Funcionalidades
 
@@ -32,6 +42,7 @@ O projeto demonstra práticas de desenvolvimento backend, incluindo validação 
 - Proteção contra venda acima do estoque em requisições concorrentes.
 - Listagem de pedidos com dados do cliente, itens e produtos.
 - Consulta de pedido por identificador.
+- Paginação da listagem de pedidos.
 - Cancelamento de pedidos pendentes, com devolução do estoque.
 - Operações críticas executadas em transações do banco de dados.
 
@@ -77,35 +88,45 @@ O cancelamento está limitado a pedidos com status `PENDING`. A mudança de stat
 
 ## Arquitetura
 
-O projeto utiliza uma organização modular, separando as responsabilidades entre rotas, controllers e casos de uso.
+O projeto mantém backend e frontend no mesmo repositório, em aplicações separadas.
 
 ```text
-src/
-├── app.ts
-├── server.ts
-├── lib/
-│   └── prisma.ts
-└── modules/
-    ├── customers/
-    ├── products/
-    └── orders/
-        ├── order.routes.ts
-        ├── order.controller.ts
-        ├── order.schema.ts
-        └── use-cases/
-            ├── create-order.use-case.ts
-            ├── list-orders.use-case.ts
-            ├── get-order.use-case.ts
-            └── cancel-order.use-case.ts
-
-prisma/
-├── schema.prisma
-└── migrations/
-
-tests/
+orderflow-api/
+├── src/
+│   ├── app.ts
+│   ├── server.ts
+│   ├── lib/
+│   │   └── prisma.ts
+│   └── modules/
+│       ├── customers/
+│       ├── products/
+│       └── orders/
+│           ├── order.routes.ts
+│           ├── order.controller.ts
+│           ├── order.schema.ts
+│           └── use-cases/
+│               ├── create-order.use-case.ts
+│               ├── list-orders.use-case.ts
+│               ├── get-order.use-case.ts
+│               └── cancel-order.use-case.ts
+├── prisma/
+│   ├── schema.prisma
+│   └── migrations/
+├── tests/
+├── frontend/
+│   ├── src/
+│   │   ├── App.tsx
+│   │   ├── App.css
+│   │   └── main.tsx
+│   ├── public/
+│   ├── package.json
+│   └── vite.config.ts
+├── docker-compose.yml
+├── package.json
+└── README.md
 ```
 
-A estrutura mantém a lógica de negócio nos casos de uso, enquanto os controllers tratam as requisições HTTP e suas respostas.
+A estrutura mantém a lógica de negócio nos casos de uso, enquanto os controllers tratam as requisições HTTP e suas respostas. O frontend é responsável pela apresentação dos dados e pela interação com a API.
 
 ## Como executar localmente
 
@@ -184,6 +205,15 @@ Resposta esperada:
 }
 ```
 
+### 6. Instalar as dependências do frontend
+
+```bash
+cd frontend
+npm install
+npm run dev
+Abra http://localhost:5173 no navegador.
+```
+
 ## Testes e compilação
 
 Executar todos os testes automatizados:
@@ -204,7 +234,6 @@ O conjunto atual possui **24 testes automatizados aprovados**.
 
 ## Próximas evoluções
 
-- Paginação e filtros na listagem de pedidos.
 - Documentação interativa com OpenAPI/Swagger.
 - Pipeline de CI com testes e compilação.
 - Melhorias de observabilidade e tratamento de erros.
