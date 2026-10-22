@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { OrdersTable } from "./components/OrdersTable";
 import "./App.css";
 
 type OrderItem = {
@@ -108,44 +109,12 @@ function App() {
           {!loading && !error && orders.length > 0 && (
             <>
               <div className="table-wrapper">
-                <table className="orders-table">
-                  <thead>
-                    <tr>
-                      <th>Pedido</th>
-                      <th>Cliente</th>
-                      <th>Itens</th>
-                      <th>Total</th>
-                      <th>Status</th>
-                      <th>Data</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {orders.map((order) => (
-                      <tr key={order.id}>
-                        <td title={order.id}>{order.id.slice(0, 8)}</td>
-                        <td>{order.customer.name}</td>
-                        <td>
-                          {order.items.reduce(
-                            (sum, item) => sum + item.quantity,
-                            0,
-                          )}
-                        </td>
-                        <td>
-                          {Number(order.total).toLocaleString("pt-BR", {
-                            style: "currency",
-                            currency: "BRL",
-                          })}
-                        </td>
-                        <td>{order.status}</td>
-                        <td>
-                          {new Date(order.createdAt).toLocaleDateString(
-                            "pt-BR",
-                          )}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+                <OrdersTable
+                  orders={orders}
+                  onSelectOrder={(orderId) => {
+                    console.log("Pedido selecionado:", orderId);
+                  }}
+                />
               </div>
 
               <div className="pagination">
