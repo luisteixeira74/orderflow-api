@@ -221,4 +221,64 @@ describe("POST /orders", () => {
 
     expect(updatedProduct?.stock).toBe(5);
   });
+
+  it("should prevent overselling when orders happen concurrently", async () => {
+    const customer = await prisma.customer.create({
+      data: {
+        name: "Cliente Concorrente",
+        email: `order-concurrent-${Date.now()}@example.com`,
+      },
+    });
+
+    const product = await prisma.product.create({
+      data: {
+        name: "Produto Concorrente",
+        price: "50.00",
+        stock: 5,
+      },
+    });
+
+    const payload = {
+      customerId: customer.id,
+      items: [
+        {
+          productId: product.id,
+          quantity: 4,
+        },
+      ],
+    };
+
+    const [response1, response2] = await Promise.all([
+      app.inject({
+        method: "POST",
+        url: "/orders",
+        payload,
+      }),
+      app.inject({
+        method: "POST",
+        url: "/orders",
+        payload,
+      }),
+    ]);
+
+    const statuses = [response1.statusCode, response2.statusCode].sort();
+
+    expect(statuses).toEqual([201, 409]);
+
+    const updatedProduct = await prisma.product.findUnique({
+      where: {
+        id: product.id,
+      },
+    });
+
+    expect(updatedProduct?.stock).toBe(1);
+
+    const orders = await prisma.order.findMany({
+      where: {
+        customerId: customer.id,
+      },
+    });
+
+    expect(orders).toHaveLength(1);
+  });
 });
