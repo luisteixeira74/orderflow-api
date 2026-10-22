@@ -437,3 +437,121 @@ describe("GET /orders/:id", () => {
     });
   });
 });
+
+describe("PATCH /orders/:id/cancel", () => {
+  let app: ReturnType<typeof buildApp>;
+
+  beforeEach(() => {
+    app = buildApp();
+  });
+
+  afterEach(async () => {
+    await app.close();
+  });
+
+  async function createTestOrder() {
+    const customer = await prisma.customer.create({
+      data: {
+        name: "Cliente Cancelamento",
+        email: `cancel-order-${Date.now()}-${Math.random()}@example.com`,
+      },
+    });
+
+    const product = await prisma.product.create({
+      data: {
+        name: "Produto Cancelamento",
+        price: "50.00",
+        stock: 10,
+      },
+    });
+
+    const response = await app.inject({
+      method: "POST",
+      url: "/orders",
+      payload: {
+        customerId: customer.id,
+        items: [{ productId: product.id, quantity: 2 }],
+      },
+    });
+
+    expect(response.statusCode).toBe(201);
+
+    return {
+      order: response.json(),
+      product,
+    };
+  }
+
+  it("should cancel an order and restore stock", async () => {
+    const { order, product } = await createTestOrder();
+
+    const response = await app.inject({
+      method: "PATCH",
+      url: `/orders/${order.id}/cancel`,
+    });
+
+    expect(response.statusCode).toBe(200);
+    expect(response.json().status).toBe("CANCELLED");
+
+    const updatedProduct = await prisma.product.findUnique({
+      where: { id: product.id },
+    });
+
+    expect(updatedProduct?.stock).toBe(10);
+  });
+
+  it("should return 404 when order does not exist", async () => {
+    const response = await app.inject({
+      method: "PATCH",
+      url: "/orders/pedido-inexistente/cancel",
+    });
+
+    expect(response.statusCode).toBe(404);
+    expect(response.json()).toMatchObject({
+      message: "Pedido não encontrado",
+    });
+  });
+
+  it("should not restore stock twice when order is already cancelled", async () => {
+    const { order, product } = await createTestOrder();
+
+    const firstResponse = await app.inject({
+      method: "PATCH",
+      url: `/orders/${order.id}/cancel`,
+    });
+
+    expect(firstResponse.statusCode).toBe(200);
+
+    const secondResponse = await app.inject({
+      method: "PATCH",
+      url: `/orders/${order.id}/cancel`,
+    });
+
+    expect(secondResponse.statusCode).toBe(409);
+
+    const updatedProduct = await prisma.product.findUnique({
+      where: { id: product.id },
+    });
+
+    expect(updatedProduct?.stock).toBe(10);
+  });
+
+  it("should not cancel an order outside PENDING status", async () => {
+    const { order } = await createTestOrder();
+
+    await prisma.order.update({
+      where: { id: order.id },
+      data: { status: "CONFIRMED" },
+    });
+
+    const response = await app.inject({
+      method: "PATCH",
+      url: `/orders/${order.id}/cancel`,
+    });
+
+    expect(response.statusCode).toBe(409);
+    expect(response.json()).toMatchObject({
+      message: "Pedido não pode ser cancelado neste status",
+    });
+  });
+});

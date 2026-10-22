@@ -3,6 +3,7 @@ import { createOrderSchema } from "./order.schema.js";
 import { createOrderUseCase } from "./use-cases/create-order.use-case.js";
 import { listOrdersUseCase } from "./use-cases/list-orders.use-case.js";
 import { getOrderUseCase } from "./use-cases/get-order.use-case.js";
+import { cancelOrderUseCase } from "./use-cases/cancel-order.use-case.js";
 
 export async function createOrder(
   request: FastifyRequest,
@@ -80,6 +81,45 @@ export async function getOrder(request: FastifyRequest, reply: FastifyReply) {
 
     return reply.status(500).send({
       message: "Erro interno ao consultar pedido",
+    });
+  }
+}
+
+export async function cancelOrder(
+  request: FastifyRequest,
+  reply: FastifyReply,
+) {
+  try {
+    const { id } = request.params as { id: string };
+
+    const order = await cancelOrderUseCase(id);
+
+    return reply.status(200).send(order);
+  } catch (error) {
+    if (error instanceof Error) {
+      if (error.message === "ORDER_NOT_FOUND") {
+        return reply.status(404).send({
+          message: "Pedido não encontrado",
+        });
+      }
+
+      if (error.message === "ORDER_ALREADY_CANCELLED") {
+        return reply.status(409).send({
+          message: "Pedido já está cancelado",
+        });
+      }
+
+      if (error.message === "ORDER_CANNOT_BE_CANCELLED") {
+        return reply.status(409).send({
+          message: "Pedido não pode ser cancelado neste status",
+        });
+      }
+    }
+
+    request.log.error(error);
+
+    return reply.status(500).send({
+      message: "Erro interno ao cancelar pedido",
     });
   }
 }
