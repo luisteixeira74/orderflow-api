@@ -331,9 +331,9 @@ describe("GET /orders", () => {
 
     expect(response.statusCode).toBe(200);
 
-    const orders = response.json();
+    const result = response.json();
 
-    expect(orders).toEqual(
+    expect(result.data).toEqual(
       expect.arrayContaining([
         expect.objectContaining({
           customerId: customer.id,
@@ -435,6 +435,74 @@ describe("GET /orders/:id", () => {
     expect(response.json()).toMatchObject({
       message: "Pedido não encontrado",
     });
+  });
+
+  it("should paginate orders", async () => {
+    const customer = await prisma.customer.create({
+      data: {
+        name: "Cliente Paginação",
+        email: `pagination-${Date.now()}@example.com`,
+      },
+    });
+
+    const product = await prisma.product.create({
+      data: {
+        name: "Produto Paginação",
+        price: "10.00",
+        stock: 10,
+      },
+    });
+
+    const orderIds: string[] = [];
+
+    // Create two orders for pagination testing
+    for (let i = 0; i < 2; i++) {
+      const response = await app.inject({
+        method: "POST",
+        url: "/orders",
+        payload: {
+          customerId: customer.id,
+          items: [{ productId: product.id, quantity: 1 }],
+        },
+      });
+
+      expect(response.statusCode).toBe(201);
+      orderIds.push(response.json().id);
+    }
+
+    const firstPage = await app.inject({
+      method: "GET",
+      url: "/orders?page=1&limit=1",
+    });
+
+    const secondPage = await app.inject({
+      method: "GET",
+      url: "/orders?page=2&limit=1",
+    });
+
+    expect(firstPage.statusCode).toBe(200);
+    expect(secondPage.statusCode).toBe(200);
+
+    const firstResult = firstPage.json();
+    const secondResult = secondPage.json();
+
+    expect(firstResult.data).toHaveLength(1);
+    expect(secondResult.data).toHaveLength(1);
+    expect(firstResult.data[0].id).not.toBe(secondResult.data[0].id);
+
+    expect(firstResult.pagination).toMatchObject({
+      page: 1,
+      limit: 1,
+      total: expect.any(Number),
+    });
+
+    expect(secondResult.pagination.page).toBe(2);
+    expect(firstResult.pagination.totalPages).toBe(
+      firstResult.pagination.total,
+    );
+
+    expect(orderIds).toContain(firstResult.data[0].id);
+    expect(orderIds).toContain(secondResult.data[0].id);
   });
 });
 

@@ -52,9 +52,29 @@ export async function createOrder(
 }
 
 export async function listOrders(request: FastifyRequest, reply: FastifyReply) {
+  const query = request.query as {
+    page?: string;
+    limit?: string;
+  };
+
+  const page = Number(query.page ?? 1);
+  const limit = Number(query.limit ?? 10);
+
+  if (
+    !Number.isInteger(page) ||
+    page < 1 ||
+    !Number.isInteger(limit) ||
+    limit < 1 ||
+    limit > 100
+  ) {
+    return reply.status(400).send({
+      message: "page deve ser positivo e limit deve estar entre 1 e 100",
+    });
+  }
+
   try {
-    const orders = await listOrdersUseCase();
-    return reply.status(200).send(orders);
+    const result = await listOrdersUseCase(page, limit);
+    return reply.status(200).send(result);
   } catch (error) {
     request.log.error(error);
     return reply.status(500).send({
