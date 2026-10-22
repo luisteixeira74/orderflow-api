@@ -282,3 +282,158 @@ describe("POST /orders", () => {
     expect(orders).toHaveLength(1);
   });
 });
+
+describe("GET /orders", () => {
+  let app: ReturnType<typeof buildApp>;
+
+  beforeEach(() => {
+    app = buildApp();
+  });
+
+  afterEach(async () => {
+    await app.close();
+  });
+
+  it("should list orders with customer and products", async () => {
+    const customer = await prisma.customer.create({
+      data: {
+        name: "Maria Silva",
+        email: `list-orders-${Date.now()}@example.com`,
+      },
+    });
+
+    const product = await prisma.product.create({
+      data: {
+        name: "Teclado para Listagem",
+        price: "100.00",
+        stock: 10,
+      },
+    });
+
+    await app.inject({
+      method: "POST",
+      url: "/orders",
+      payload: {
+        customerId: customer.id,
+        items: [
+          {
+            productId: product.id,
+            quantity: 2,
+          },
+        ],
+      },
+    });
+
+    const response = await app.inject({
+      method: "GET",
+      url: "/orders",
+    });
+
+    expect(response.statusCode).toBe(200);
+
+    const orders = response.json();
+
+    expect(orders).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          customerId: customer.id,
+          customer: expect.objectContaining({
+            name: "Maria Silva",
+          }),
+          items: expect.arrayContaining([
+            expect.objectContaining({
+              productId: product.id,
+              quantity: 2,
+              product: expect.objectContaining({
+                name: "Teclado para Listagem",
+              }),
+            }),
+          ]),
+        }),
+      ]),
+    );
+  });
+});
+
+describe("GET /orders/:id", () => {
+  let app: ReturnType<typeof buildApp>;
+
+  beforeEach(() => {
+    app = buildApp();
+  });
+
+  afterEach(async () => {
+    await app.close();
+  });
+
+  it("should return an order with customer and products", async () => {
+    const customer = await prisma.customer.create({
+      data: {
+        name: "Cliente Consulta",
+        email: `get-order-${Date.now()}@example.com`,
+      },
+    });
+
+    const product = await prisma.product.create({
+      data: {
+        name: "Produto Consulta",
+        price: "75.00",
+        stock: 10,
+      },
+    });
+
+    const createResponse = await app.inject({
+      method: "POST",
+      url: "/orders",
+      payload: {
+        customerId: customer.id,
+        items: [
+          {
+            productId: product.id,
+            quantity: 2,
+          },
+        ],
+      },
+    });
+
+    expect(createResponse.statusCode).toBe(201);
+
+    const createdOrder = createResponse.json();
+
+    const response = await app.inject({
+      method: "GET",
+      url: `/orders/${createdOrder.id}`,
+    });
+
+    expect(response.statusCode).toBe(200);
+
+    expect(response.json()).toMatchObject({
+      id: createdOrder.id,
+      customerId: customer.id,
+      customer: {
+        name: "Cliente Consulta",
+      },
+      items: [
+        {
+          productId: product.id,
+          quantity: 2,
+          product: {
+            name: "Produto Consulta",
+          },
+        },
+      ],
+    });
+  });
+
+  it("should return 404 when order does not exist", async () => {
+    const response = await app.inject({
+      method: "GET",
+      url: "/orders/pedido-inexistente",
+    });
+
+    expect(response.statusCode).toBe(404);
+    expect(response.json()).toMatchObject({
+      message: "Pedido não encontrado",
+    });
+  });
+});

@@ -1,6 +1,8 @@
 import type { FastifyReply, FastifyRequest } from "fastify";
 import { createOrderSchema } from "./order.schema.js";
 import { createOrderUseCase } from "./use-cases/create-order.use-case.js";
+import { listOrdersUseCase } from "./use-cases/list-orders.use-case.js";
+import { getOrderUseCase } from "./use-cases/get-order.use-case.js";
 
 export async function createOrder(
   request: FastifyRequest,
@@ -44,6 +46,40 @@ export async function createOrder(
 
     return reply.status(500).send({
       message: "Erro interno ao criar pedido",
+    });
+  }
+}
+
+export async function listOrders(request: FastifyRequest, reply: FastifyReply) {
+  try {
+    const orders = await listOrdersUseCase();
+    return reply.status(200).send(orders);
+  } catch (error) {
+    request.log.error(error);
+    return reply.status(500).send({
+      message: "Erro interno ao listar pedidos",
+    });
+  }
+}
+
+export async function getOrder(request: FastifyRequest, reply: FastifyReply) {
+  try {
+    const { id } = request.params as { id: string };
+
+    const order = await getOrderUseCase(id);
+
+    if (!order) {
+      return reply.status(404).send({
+        message: "Pedido não encontrado",
+      });
+    }
+
+    return reply.status(200).send(order);
+  } catch (error) {
+    request.log.error(error);
+
+    return reply.status(500).send({
+      message: "Erro interno ao consultar pedido",
     });
   }
 }
