@@ -233,3 +233,156 @@ button {
   background: #fee2e2;
   color: #991b1b;
 }
+
+/* Detalhes do pedido */
+.order-details {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  padding: 24px;
+  border: 1px solid #e5e7eb;
+  border-radius: 12px;
+  background: #ffffff;
+}
+
+.order-details-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.order-details-header h2 {
+  margin: 0 0 8px;
+  color: #0f172a;
+  font-size: 22px;
+}
+
+.order-id {
+  margin: 0;
+  color: #64748b;
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+
+.order-info {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+}
+
+.order-info-item {
+  padding: 18px;
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  background: #f8fafc;
+}
+
+.order-info-item span {
+  display: block;
+  margin-bottom: 8px;
+  color: #64748b;
+  font-size: 13px;
+}
+
+.order-info-item strong {
+  color: #0f172a;
+  overflow-wrap: anywhere;
+}
+
+.order-items h3 {
+  margin: 0 0 16px;
+  color: #0f172a;
+  font-size: 17px;
+}
+
+.order-items-table {
+  width: 100%;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.order-items-table th,
+.order-items-table td {
+  padding: 16px;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.order-items-table th {
+  background: #f8fafc;
+  color: #64748b;
+  font-size: 12px;
+  text-transform: uppercase;
+}
+
+.order-items-table td {
+  color: #334155;
+  font-size: 14px;
+}
+
+.order-items-table .numeric {
+  text-align: right;
+  white-space: nowrap;
+}
+
+.order-total {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding-top: 20px;
+}
+
+.order-total span {
+  color: #475569;
+  font-weight: 600;
+}
+
+.order-total strong {
+  color: #1d4ed8;
+  font-size: 24px;
+}
+
+.order-back-button {
+  align-self: flex-start;
+  background: #ffffff;
+  color: #2563eb;
+  border: 1px solid #bfdbfe;
+}
+
+.order-back-button:hover {
+  background: #eff6ff;
+}
+
+@media (max-width: 600px) {
+  .order-details {
+    padding: 16px;
+  }
+
+  .order-details-header {
+    flex-direction: column;
+  }
+
+  .order-info {
+    grid-template-columns: 1fr;
+  }
+
+  .order-items-table th,
+  .order-items-table td {
+    padding: 12px 8px;
+  }
+
+  .order-items-table th {
+    font-size: 10px;
+  }
+
+  .order-items-table td {
+    font-size: 12px;
+  }
+
+  .order-total strong {
+    font-size: 20px;
+  }
+}

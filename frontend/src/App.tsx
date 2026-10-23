@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { OrdersTable } from "./components/OrdersTable";
+import { OrderDetails } from "./components/OrderDetails";
 import "./App.css";
 
 type OrderItem = {
@@ -39,6 +40,7 @@ function App() {
   const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
 
   useEffect(() => {
     async function loadOrders() {
@@ -106,40 +108,48 @@ function App() {
             </div>
           )}
 
-          {!loading && !error && orders.length > 0 && (
-            <>
-              <div className="table-wrapper">
-                <OrdersTable
-                  orders={orders}
-                  onSelectOrder={(orderId) => {
-                    console.log("Pedido selecionado:", orderId);
-                  }}
-                />
-              </div>
-
-              <div className="pagination">
-                <button
-                  type="button"
-                  disabled={page <= 1 || loading}
-                  onClick={() => setPage((current) => current - 1)}
-                >
-                  Anterior
-                </button>
-
-                <span>
-                  Página {page} de {totalPages}
-                </span>
-
-                <button
-                  type="button"
-                  disabled={page >= totalPages || loading}
-                  onClick={() => setPage((current) => current + 1)}
-                >
-                  Próxima
-                </button>
-              </div>
-            </>
+          {!loading && !error && selectedOrderId !== null && (
+            <OrderDetails
+              orderId={selectedOrderId}
+              onBack={() => setSelectedOrderId(null)}
+            />
           )}
+
+          {!loading &&
+            !error &&
+            selectedOrderId === null &&
+            orders.length > 0 && (
+              <>
+                <div className="table-wrapper">
+                  <OrdersTable
+                    orders={orders}
+                    onSelectOrder={setSelectedOrderId}
+                  />
+                </div>
+
+                <div className="pagination">
+                  <button
+                    type="button"
+                    disabled={page <= 1 || loading}
+                    onClick={() => setPage((current) => current - 1)}
+                  >
+                    Anterior
+                  </button>
+
+                  <span>
+                    Página {page} de {totalPages}
+                  </span>
+
+                  <button
+                    type="button"
+                    disabled={page >= totalPages || loading}
+                    onClick={() => setPage((current) => current + 1)}
+                  >
+                    Próxima
+                  </button>
+                </div>
+              </>
+            )}
         </section>
       </main>
     </div>
