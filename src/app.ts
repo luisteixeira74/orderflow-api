@@ -3,10 +3,21 @@ import { customerRoutes } from "./modules/customers/customer.routes.js";
 import { productRoutes } from "./modules/products/product.routes.js";
 import { orderRoutes } from "./modules/orders/order.routes.js";
 import cors from "@fastify/cors";
+import metricsModule from "fastify-metrics";
+
+const metricsPlugin = metricsModule.default;
 
 export function buildApp() {
   const app = Fastify({
     logger: true,
+  });
+
+  app.register(metricsPlugin, {
+    endpoint: "/metrics",
+    defaultMetrics: {
+      enabled: false,
+    },
+    clearRegisterOnInit: true,
   });
 
   app.get("/health", async () => {
