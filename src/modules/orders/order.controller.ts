@@ -4,6 +4,7 @@ import { createOrderUseCase } from "./use-cases/create-order.use-case.js";
 import { listOrdersUseCase } from "./use-cases/list-orders.use-case.js";
 import { getOrderUseCase } from "./use-cases/get-order.use-case.js";
 import { cancelOrderUseCase } from "./use-cases/cancel-order.use-case.js";
+import { ORDER_STATUSES } from "./order.constants.js";
 
 export async function createOrder(
   request: FastifyRequest,
@@ -55,10 +56,20 @@ export async function listOrders(request: FastifyRequest, reply: FastifyReply) {
   const query = request.query as {
     page?: string;
     limit?: string;
+    search?: string;
+    status?: string;
   };
 
   const page = Number(query.page ?? 1);
   const limit = Number(query.limit ?? 10);
+  const search = query.search?.trim() ?? "";
+  const status = query.status?.trim() ?? "";
+
+  if (status && !(ORDER_STATUSES as readonly string[]).includes(status)) {
+    return reply.status(400).send({
+      message: "Status inválido para filtro de pedidos",
+    });
+  }
 
   if (
     !Number.isInteger(page) ||
@@ -73,7 +84,10 @@ export async function listOrders(request: FastifyRequest, reply: FastifyReply) {
   }
 
   try {
-    const result = await listOrdersUseCase(page, limit);
+    const result = await listOrdersUseCase(page, limit, {
+      search,
+      status,
+    });
     return reply.status(200).send(result);
   } catch (error) {
     request.log.error(error);
