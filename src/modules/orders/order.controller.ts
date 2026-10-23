@@ -5,6 +5,8 @@ import { listOrdersUseCase } from "./use-cases/list-orders.use-case.js";
 import { getOrderUseCase } from "./use-cases/get-order.use-case.js";
 import { cancelOrderUseCase } from "./use-cases/cancel-order.use-case.js";
 import { ORDER_STATUSES } from "./order.constants.js";
+import type { HttpErrorResponse } from "../../shared/http-error.js";
+import { z } from "zod";
 
 export async function createOrder(
   request: FastifyRequest,
@@ -13,10 +15,12 @@ export async function createOrder(
   const result = createOrderSchema.safeParse(request.body);
 
   if (!result.success) {
-    return reply.status(400).send({
-      message: "Invalid request body",
-      errors: result.error.format(),
-    });
+    const response: HttpErrorResponse = {
+      message: "Corpo da requisição inválido",
+      errors: z.treeifyError(result.error),
+    };
+
+    return reply.status(400).send(response);
   }
 
   try {
@@ -26,21 +30,27 @@ export async function createOrder(
   } catch (error) {
     if (error instanceof Error) {
       if (error.message === "CUSTOMER_NOT_FOUND") {
-        return reply.status(404).send({
+        const response: HttpErrorResponse = {
           message: "Cliente não encontrado",
-        });
+        };
+
+        return reply.status(404).send(response);
       }
 
       if (error.message === "PRODUCT_NOT_FOUND") {
-        return reply.status(404).send({
+        const response: HttpErrorResponse = {
           message: "Produto não encontrado",
-        });
+        };
+
+        return reply.status(404).send(response);
       }
 
       if (error.message === "INSUFFICIENT_STOCK") {
-        return reply.status(409).send({
+        const response: HttpErrorResponse = {
           message: "Estoque insuficiente",
-        });
+        };
+
+        return reply.status(409).send(response);
       }
     }
 
@@ -66,9 +76,11 @@ export async function listOrders(request: FastifyRequest, reply: FastifyReply) {
   const status = query.status?.trim() ?? "";
 
   if (status && !(ORDER_STATUSES as readonly string[]).includes(status)) {
-    return reply.status(400).send({
+    const response: HttpErrorResponse = {
       message: "Status inválido para filtro de pedidos",
-    });
+    };
+
+    return reply.status(400).send(response);
   }
 
   if (
@@ -78,9 +90,11 @@ export async function listOrders(request: FastifyRequest, reply: FastifyReply) {
     limit < 1 ||
     limit > 100
   ) {
-    return reply.status(400).send({
+    const response: HttpErrorResponse = {
       message: "page deve ser positivo e limit deve estar entre 1 e 100",
-    });
+    };
+
+    return reply.status(400).send(response);
   }
 
   try {
@@ -91,9 +105,12 @@ export async function listOrders(request: FastifyRequest, reply: FastifyReply) {
     return reply.status(200).send(result);
   } catch (error) {
     request.log.error(error);
-    return reply.status(500).send({
+
+    const response: HttpErrorResponse = {
       message: "Erro interno ao listar pedidos",
-    });
+    };
+
+    return reply.status(500).send(response);
   }
 }
 
@@ -104,18 +121,22 @@ export async function getOrder(request: FastifyRequest, reply: FastifyReply) {
     const order = await getOrderUseCase(id);
 
     if (!order) {
-      return reply.status(404).send({
+      const response: HttpErrorResponse = {
         message: "Pedido não encontrado",
-      });
+      };
+
+      return reply.status(404).send(response);
     }
 
     return reply.status(200).send(order);
   } catch (error) {
     request.log.error(error);
 
-    return reply.status(500).send({
+    const response: HttpErrorResponse = {
       message: "Erro interno ao consultar pedido",
-    });
+    };
+
+    return reply.status(500).send(response);
   }
 }
 
@@ -132,28 +153,36 @@ export async function cancelOrder(
   } catch (error) {
     if (error instanceof Error) {
       if (error.message === "ORDER_NOT_FOUND") {
-        return reply.status(404).send({
+        const response: HttpErrorResponse = {
           message: "Pedido não encontrado",
-        });
+        };
+
+        return reply.status(404).send(response);
       }
 
       if (error.message === "ORDER_ALREADY_CANCELLED") {
-        return reply.status(409).send({
+        const response: HttpErrorResponse = {
           message: "Pedido já está cancelado",
-        });
+        };
+
+        return reply.status(409).send(response);
       }
 
       if (error.message === "ORDER_CANNOT_BE_CANCELLED") {
-        return reply.status(409).send({
+        const response: HttpErrorResponse = {
           message: "Pedido não pode ser cancelado neste status",
-        });
+        };
+
+        return reply.status(409).send(response);
       }
     }
 
     request.log.error(error);
 
-    return reply.status(500).send({
+    const response: HttpErrorResponse = {
       message: "Erro interno ao cancelar pedido",
-    });
+    };
+
+    return reply.status(500).send(response);
   }
 }
