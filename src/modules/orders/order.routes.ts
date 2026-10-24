@@ -11,6 +11,8 @@ import { createOrderMetrics } from "../../plugins/metrics.js";
 export async function orderRoutes(app: FastifyInstance) {
   const orderMetrics = createOrderMetrics(app);
 
+  app.addHook("preHandler", app.authenticate);
+
   app.post("/orders", (request, reply) =>
     createOrder(request, reply, orderMetrics),
   );

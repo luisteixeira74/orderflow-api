@@ -1,11 +1,10 @@
 import { prisma } from "../../../lib/prisma.js";
 
 const ALLOWED_TRANSITIONS: Record<string, string[]> = {
-  PENDING: ["CONFIRMED"],
-  CONFIRMED: ["IN_PREPARATION"],
-  IN_PREPARATION: ["READY_FOR_DELIVERY"],
-  READY_FOR_DELIVERY: ["OUT_FOR_DELIVERY"],
-  OUT_FOR_DELIVERY: ["DELIVERED"],
+  PENDING: ["CONFIRMED", "CANCELLED"],
+  CONFIRMED: ["PROCESSING", "CANCELLED"],
+  PROCESSING: ["SHIPPED", "CANCELLED"],
+  SHIPPED: ["DELIVERED"],
 };
 
 export async function updateOrderStatusUseCase(id: string, nextStatus: string) {

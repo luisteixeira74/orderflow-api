@@ -1,8 +1,6 @@
 import { z } from "zod";
 
 export const createOrderSchema = z.object({
-  customerId: z.string().min(1, "Cliente é obrigatório"),
-
   items: z
     .array(
       z.object({

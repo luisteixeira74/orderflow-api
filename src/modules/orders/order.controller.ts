@@ -30,7 +30,7 @@ export async function createOrder(
   const startedAt = performance.now();
 
   try {
-    const order = await createOrderUseCase(result.data);
+    const order = await createOrderUseCase(result.data, request.user.sub);
 
     metrics.ordersCreated.inc();
 

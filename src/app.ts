@@ -4,6 +4,7 @@ import { productRoutes } from "./modules/products/product.routes.js";
 import { orderRoutes } from "./modules/orders/order.routes.js";
 import cors from "@fastify/cors";
 import metricsModule from "fastify-metrics";
+import { authPlugin } from "./plugins/auth.js";
 
 const metricsPlugin = metricsModule.default;
 
@@ -11,6 +12,8 @@ export function buildApp() {
   const app = Fastify({
     logger: true,
   });
+
+  app.register(authPlugin);
 
   app.register(metricsPlugin, {
     endpoint: "/metrics",

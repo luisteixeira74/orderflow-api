@@ -1,10 +1,13 @@
 import { prisma } from "../../../lib/prisma.js";
 import type { CreateOrderInput } from "../order.schema.js";
 
-export async function createOrderUseCase(data: CreateOrderInput) {
+export async function createOrderUseCase(
+  data: CreateOrderInput,
+  customerId: string,
+) {
   return prisma.$transaction(async (tx) => {
     const customer = await tx.customer.findUnique({
-      where: { id: data.customerId },
+      where: { id: customerId },
     });
 
     if (!customer) {

@@ -3,10 +3,12 @@ import {
   createCustomer,
   listCustomers,
   getCustomerById,
+  loginCustomer,
 } from "./customer.controller.js";
 
 export async function customerRoutes(app: FastifyInstance) {
   app.get("/customers", listCustomers);
   app.post("/customers", createCustomer);
   app.get("/customers/:id", getCustomerById);
+  app.post("/customers/login", loginCustomer);
 }
