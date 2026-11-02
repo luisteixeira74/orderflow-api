@@ -3,8 +3,6 @@ import { listCustomersUseCase } from "./use-cases/list-customers.use-case.js";
 import { createCustomerUseCase } from "./use-cases/create-customer.use-case.js";
 import { getCustomerByIdUseCase } from "./use-cases/get-customer-by-id.use-case.js";
 import { createCustomerSchema } from "./customer.schema.js";
-import { loginCustomerSchema } from "./customer.schema.js";
-import { loginCustomerUseCase } from "./use-cases/login-customer.use-case.js";
 
 export async function listCustomers(
   _request: FastifyRequest,
@@ -59,40 +57,4 @@ export async function getCustomerById(
   }
 
   return reply.send(customer);
-}
-
-export async function loginCustomer(
-  request: FastifyRequest,
-  reply: FastifyReply,
-) {
-  const result = loginCustomerSchema.safeParse(request.body);
-
-  if (!result.success) {
-    return reply.status(400).send({
-      message: "Dados de login inválidos",
-      errors: result.error.format(),
-    });
-  }
-
-  try {
-    const customer = await loginCustomerUseCase(result.data);
-
-    const token = await reply.jwtSign({
-      sub: customer.id,
-      email: customer.email,
-    });
-
-    return reply.send({
-      customer,
-      token,
-    });
-  } catch (error) {
-    if (error instanceof Error && error.message === "INVALID_CREDENTIALS") {
-      return reply.status(401).send({
-        message: "E-mail ou senha inválidos",
-      });
-    }
-
-    throw error;
-  }
 }
