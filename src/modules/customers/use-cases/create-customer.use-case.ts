@@ -9,6 +9,13 @@ export async function createCustomerUseCase(data: CreateCustomerInput) {
         name: data.name,
         email: data.email,
       },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        createdAt: true,
+        updatedAt: true,
+      },
     });
   } catch (error) {
     if (

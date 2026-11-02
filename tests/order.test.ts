@@ -4,9 +4,27 @@ import { prisma } from "../src/lib/prisma.js";
 
 describe("POST /orders", () => {
   let app: ReturnType<typeof buildApp>;
+  let authorization: string;
 
-  beforeEach(() => {
+  beforeEach(async () => {
     app = buildApp();
+
+    const user = await prisma.user.create({
+      data: {
+        name: "Usuário Teste",
+        email: `auth-${Date.now()}-${Math.random()}@example.com`,
+        passwordHash: "hash-teste",
+      },
+    });
+
+    await app.ready();
+
+    const token = app.jwt.sign({
+      sub: user.id,
+      email: user.email,
+    });
+
+    authorization = `Bearer ${token}`;
   });
 
   afterEach(async () => {
@@ -32,6 +50,9 @@ describe("POST /orders", () => {
     const response = await app.inject({
       method: "POST",
       url: "/orders",
+      headers: {
+        authorization,
+      },
       payload: {
         customerId: customer.id,
         items: [
@@ -93,6 +114,9 @@ describe("POST /orders", () => {
     const response = await app.inject({
       method: "POST",
       url: "/orders",
+      headers: {
+        authorization,
+      },
       payload: {
         customerId: "cliente-inexistente",
         items: [
@@ -121,6 +145,9 @@ describe("POST /orders", () => {
     const response = await app.inject({
       method: "POST",
       url: "/orders",
+      headers: {
+        authorization,
+      },
       payload: {
         customerId: customer.id,
         items: [
@@ -157,6 +184,9 @@ describe("POST /orders", () => {
     const response = await app.inject({
       method: "POST",
       url: "/orders",
+      headers: {
+        authorization,
+      },
       payload: {
         customerId: customer.id,
         items: [
@@ -193,6 +223,9 @@ describe("POST /orders", () => {
     const response = await app.inject({
       method: "POST",
       url: "/orders",
+      headers: {
+        authorization,
+      },
       payload: {
         customerId: customer.id,
         items: [
@@ -252,11 +285,17 @@ describe("POST /orders", () => {
       app.inject({
         method: "POST",
         url: "/orders",
+        headers: {
+          authorization,
+        },
         payload,
       }),
       app.inject({
         method: "POST",
         url: "/orders",
+        headers: {
+          authorization,
+        },
         payload,
       }),
     ]);
@@ -285,9 +324,27 @@ describe("POST /orders", () => {
 
 describe("GET /orders", () => {
   let app: ReturnType<typeof buildApp>;
+  let authorization: string;
 
-  beforeEach(() => {
+  beforeEach(async () => {
     app = buildApp();
+
+    const user = await prisma.user.create({
+      data: {
+        name: "Usuário Teste",
+        email: `auth-${Date.now()}-${Math.random()}@example.com`,
+        passwordHash: "hash-teste",
+      },
+    });
+
+    await app.ready();
+
+    const token = app.jwt.sign({
+      sub: user.id,
+      email: user.email,
+    });
+
+    authorization = `Bearer ${token}`;
   });
 
   afterEach(async () => {
@@ -313,6 +370,9 @@ describe("GET /orders", () => {
     await app.inject({
       method: "POST",
       url: "/orders",
+      headers: {
+        authorization,
+      },
       payload: {
         customerId: customer.id,
         items: [
@@ -327,6 +387,9 @@ describe("GET /orders", () => {
     const response = await app.inject({
       method: "GET",
       url: "/orders",
+      headers: {
+        authorization,
+      },
     });
 
     expect(response.statusCode).toBe(200);
@@ -357,9 +420,27 @@ describe("GET /orders", () => {
 
 describe("GET /orders/:id", () => {
   let app: ReturnType<typeof buildApp>;
+  let authorization: string;
 
-  beforeEach(() => {
+  beforeEach(async () => {
     app = buildApp();
+
+    const user = await prisma.user.create({
+      data: {
+        name: "Usuário Teste",
+        email: `auth-${Date.now()}-${Math.random()}@example.com`,
+        passwordHash: "hash-teste",
+      },
+    });
+
+    await app.ready();
+
+    const token = app.jwt.sign({
+      sub: user.id,
+      email: user.email,
+    });
+
+    authorization = `Bearer ${token}`;
   });
 
   afterEach(async () => {
@@ -385,6 +466,9 @@ describe("GET /orders/:id", () => {
     const createResponse = await app.inject({
       method: "POST",
       url: "/orders",
+      headers: {
+        authorization,
+      },
       payload: {
         customerId: customer.id,
         items: [
@@ -403,6 +487,9 @@ describe("GET /orders/:id", () => {
     const response = await app.inject({
       method: "GET",
       url: `/orders/${createdOrder.id}`,
+      headers: {
+        authorization,
+      },
     });
 
     expect(response.statusCode).toBe(200);
@@ -428,6 +515,9 @@ describe("GET /orders/:id", () => {
   it("should return 404 when order does not exist", async () => {
     const response = await app.inject({
       method: "GET",
+      headers: {
+        authorization,
+      },
       url: "/orders/pedido-inexistente",
     });
 
@@ -460,6 +550,9 @@ describe("GET /orders/:id", () => {
       const response = await app.inject({
         method: "POST",
         url: "/orders",
+        headers: {
+          authorization,
+        },
         payload: {
           customerId: customer.id,
           items: [{ productId: product.id, quantity: 1 }],
@@ -473,11 +566,17 @@ describe("GET /orders/:id", () => {
     const firstPage = await app.inject({
       method: "GET",
       url: "/orders?page=1&limit=1",
+      headers: {
+        authorization,
+      },
     });
 
     const secondPage = await app.inject({
       method: "GET",
       url: "/orders?page=2&limit=1",
+      headers: {
+        authorization,
+      },
     });
 
     expect(firstPage.statusCode).toBe(200);
@@ -508,9 +607,27 @@ describe("GET /orders/:id", () => {
 
 describe("PATCH /orders/:id/cancel", () => {
   let app: ReturnType<typeof buildApp>;
+  let authorization: string;
 
-  beforeEach(() => {
+  beforeEach(async () => {
     app = buildApp();
+
+    const user = await prisma.user.create({
+      data: {
+        name: "Usuário Teste",
+        email: `auth-${Date.now()}-${Math.random()}@example.com`,
+        passwordHash: "hash-teste",
+      },
+    });
+
+    await app.ready();
+
+    const token = app.jwt.sign({
+      sub: user.id,
+      email: user.email,
+    });
+
+    authorization = `Bearer ${token}`;
   });
 
   afterEach(async () => {
@@ -536,6 +653,9 @@ describe("PATCH /orders/:id/cancel", () => {
     const response = await app.inject({
       method: "POST",
       url: "/orders",
+      headers: {
+        authorization,
+      },
       payload: {
         customerId: customer.id,
         items: [{ productId: product.id, quantity: 2 }],
@@ -556,6 +676,9 @@ describe("PATCH /orders/:id/cancel", () => {
     const response = await app.inject({
       method: "PATCH",
       url: `/orders/${order.id}/cancel`,
+      headers: {
+        authorization,
+      },
     });
 
     expect(response.statusCode).toBe(200);
@@ -572,6 +695,9 @@ describe("PATCH /orders/:id/cancel", () => {
     const response = await app.inject({
       method: "PATCH",
       url: "/orders/pedido-inexistente/cancel",
+      headers: {
+        authorization,
+      },
     });
 
     expect(response.statusCode).toBe(404);
@@ -586,6 +712,9 @@ describe("PATCH /orders/:id/cancel", () => {
     const firstResponse = await app.inject({
       method: "PATCH",
       url: `/orders/${order.id}/cancel`,
+      headers: {
+        authorization,
+      },
     });
 
     expect(firstResponse.statusCode).toBe(200);
@@ -593,6 +722,9 @@ describe("PATCH /orders/:id/cancel", () => {
     const secondResponse = await app.inject({
       method: "PATCH",
       url: `/orders/${order.id}/cancel`,
+      headers: {
+        authorization,
+      },
     });
 
     expect(secondResponse.statusCode).toBe(409);
@@ -615,6 +747,9 @@ describe("PATCH /orders/:id/cancel", () => {
     const response = await app.inject({
       method: "PATCH",
       url: `/orders/${order.id}/cancel`,
+      headers: {
+        authorization,
+      },
     });
 
     expect(response.statusCode).toBe(409);

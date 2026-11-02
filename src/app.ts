@@ -2,8 +2,10 @@ import Fastify from "fastify";
 import { customerRoutes } from "./modules/customers/customer.routes.js";
 import { productRoutes } from "./modules/products/product.routes.js";
 import { orderRoutes } from "./modules/orders/order.routes.js";
+import { authRoutes } from "./modules/auth/auth.routes.js";
 import cors from "@fastify/cors";
 import metricsModule from "fastify-metrics";
+import { authPlugin } from "./plugins/auth.js";
 
 const metricsPlugin = metricsModule.default;
 
@@ -11,6 +13,8 @@ export function buildApp() {
   const app = Fastify({
     logger: true,
   });
+
+  app.register(authPlugin);
 
   app.register(metricsPlugin, {
     endpoint: "/metrics",
@@ -31,6 +35,7 @@ export function buildApp() {
     origin: "http://localhost:5173",
   });
 
+  app.register(authRoutes, { prefix: "/auth" });
   app.register(customerRoutes);
   app.register(productRoutes);
   app.register(orderRoutes);

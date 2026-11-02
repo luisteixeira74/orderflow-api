@@ -1,4 +1,5 @@
 import { afterEach, describe, it, expect, vi } from "vitest";
+import { prisma } from "../src/lib/prisma.js";
 
 const { createOrderUseCaseMock } = vi.hoisted(() => ({
   createOrderUseCaseMock: vi.fn(),
@@ -18,6 +19,21 @@ describe("POST /orders - unexpected errors", () => {
   });
 
   it("should return 500 when an unexpected error occurs", async () => {
+    await app.ready();
+
+    const user = await prisma.user.create({
+      data: {
+        name: "Usuário Teste",
+        email: `error-test-${Date.now()}@example.com`,
+        passwordHash: "hash-teste",
+      },
+    });
+
+    const token = app.jwt.sign({
+      sub: user.id,
+      email: user.email,
+    });
+
     createOrderUseCaseMock.mockRejectedValue(
       new Error("Database connection failed"),
     );
@@ -25,6 +41,9 @@ describe("POST /orders - unexpected errors", () => {
     const response = await app.inject({
       method: "POST",
       url: "/orders",
+      headers: {
+        authorization: `Bearer ${token}`,
+      },
       payload: {
         customerId: "customer-test",
         items: [
